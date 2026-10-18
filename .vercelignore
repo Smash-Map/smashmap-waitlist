@@ -1,0 +1,4 @@
+# Jamais en ligne : les variables viennent des Environment Variables de Vercel.
+.env
+env.js
+LISEZMOI.md
