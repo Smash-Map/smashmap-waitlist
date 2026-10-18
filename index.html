@@ -634,8 +634,10 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
 
   // Provenance : ?src= du lien de bio, sinon navigateur intégré
   var params = new URLSearchParams(location.search);
-  // Retour du lien de confirmation : Supabase met la session dans le #, on ne s'en sert pas ici.
-  if (/access_token|error_description/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search);
+  // Retour du lien de l'e-mail : Supabase met la session (ou l'erreur) dans le #. La session n'est
+  // pas gardée : le jeton sert une fois, à relire le lien de bande du compte (voir confirme).
+  var retour = new URLSearchParams(location.hash.slice(1));
+  if (retour.has("access_token") || retour.has("error_description")) history.replaceState(null, "", location.pathname + location.search);
   var ua = navigator.userAgent || "";
   var source = (params.get("src") || "").slice(0,20)
     || (/Instagram/i.test(ua) ? "instagram" : /musical_ly|Bytedance|TikTok/i.test(ua) ? "tiktok" : /FBAN|FBAV/i.test(ua) ? "facebook" : /Snapchat/i.test(ua) ? "snapchat" : "direct");
@@ -690,9 +692,43 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
   // Déjà inscrit sur ce navigateur : on réaffiche son lien. Seulement un vrai
   // code (12 signes tirés au hasard, 8 pour les tout premiers) : les codes de test ou de l'ancienne
   // version (DEMO42, 6 signes) ne relient personne, on les oublie.
+  var CODE = /^[A-HJ-NP-Z2-9]{8}([A-HJ-NP-Z2-9]{4})?$/;
   var saved = store("smashmap_code");
-  if (saved && !/^[A-HJ-NP-Z2-9]{8}([A-HJ-NP-Z2-9]{4})?$/.test(saved)) { try{ localStorage.removeItem("smashmap_code"); localStorage.removeItem("smashmap_bande"); }catch(e){} saved = null; }
-  if (saved && !ref) showDone({ code: saved, bande: store("smashmap_bande") || 1 }, true);
+  if (saved && !CODE.test(saved)) { try{ localStorage.removeItem("smashmap_code"); localStorage.removeItem("smashmap_bande"); }catch(e){} saved = null; }
+  if (retour.get("type") === "signup" && retour.get("access_token")) confirme(retour.get("access_token"));
+  else if (retour.has("error_description")) lienPerime();
+  else if (saved && !ref) showDone({ code: saved, bande: store("smashmap_bande") || 1 }, true);
+
+  // Retour du lien « Confirmer mon e-mail » : on le dit, avec son lien de bande relu dans le compte
+  // (l'e-mail a pu être ouvert sur un autre appareil que celui de l'inscription).
+  function confirme(token){
+    var compte = ENV.SUPABASE_URL && ENV.SUPABASE_ANON_KEY
+      ? fetch(ENV.SUPABASE_URL + "/auth/v1/user", { headers: { apikey: ENV.SUPABASE_ANON_KEY, Authorization: "Bearer " + token } })
+          .then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      : Promise.resolve({});
+    compte
+      .catch(function(err){ console.warn("[waitlist] confirmation :", err && err.message); return {}; })
+      .then(function(user){
+        var m = user.user_metadata || {};
+        var code = CODE.test(m.crew_code || "") ? m.crew_code : saved;
+        if (code) showDone({ code: code, bande: code === saved ? store("smashmap_bande") || 1 : (m.crew_ref ? 2 : 1) }, false);
+        else {
+          // Compte créé depuis l'app : pas de lien de bande à montrer.
+          $("waitlist").hidden = true; $("done").hidden = false; $("proof").hidden = true;
+          document.querySelectorAll("#done .crew, #done .linkbox, #done .share, #done .tip").forEach(function(el){ el.hidden = true; });
+        }
+        $("done-title").textContent = "Confirmed. You're on the list.";
+        document.querySelector("#done .lead").textContent = "Your email is verified and your spot is locked in. On launch day, sign into the app with this email and your password. Meanwhile, bring your crew: SmashMap comes alive at four.";
+        reveal();
+      });
+  }
+
+  // Lien expiré ou déjà utilisé (un 2e clic sur le bouton de l'e-mail, par exemple).
+  function lienPerime(){
+    var msg = "This confirmation link has expired or was already used. If you already confirmed your email, you're all set.";
+    if (saved && !ref) { showDone({ code: saved, bande: store("smashmap_bande") || 1 }, true); document.querySelector("#done .lead").textContent = msg; }
+    else { $("wl-status").hidden = false; $("wl-status").textContent = msg; }
+  }
 
   // Un autre inscrit sur le même téléphone : on oublie ce code, retour au formulaire.
   $("again").addEventListener("click", function(){
