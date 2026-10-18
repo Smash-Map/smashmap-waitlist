@@ -482,7 +482,7 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
       <div class="step">
         <div class="vis vis-map"><svg class="drop"><use href="#peche"/></svg></div>
         <h3>Ajoute ton smash</h3>
-        <p>Un titre, une ville, une date. La position est arrondie avant même de quitter ton téléphone.</p>
+        <p>Un titre, un surnom, un endroit sur la carte. Ta bande le voit, personne d'autre, et <a href="#donnees">tes données restent protégées</a>.</p>
       </div>
       <div class="step">
         <div class="vis">
@@ -537,7 +537,7 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
         <h2>Ta carte ne sort pas de ta bande.</h2>
       </div>
       <div class="promises">
-        <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Aucun nom, jamais</b><span>Impossible de nommer ou de taguer quelqu'un. Le champ n'existe pas.</span></div></div>
+        <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Personne n'est tagué</b><span>Pas de tag, pas de compte relié. Le surnom que tu donnes reste privé, sauf si tu choisis de le montrer à ta bande.</span></div></div>
         <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Rien n'est public</b><span>Pas de profils d'inconnus, pas de messagerie ouverte. SmashMap ne met personne en relation.</span></div></div>
         <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Tu pars quand tu veux</b><span>Tu supprimes ton compte en un geste, et tout part avec.</span></div></div>
       </div>
@@ -575,7 +575,8 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
     <details>
       <summary>Ce qu'on fait de tes données</summary>
       <ul>
-        <li>Ton inscription crée ton compte SmashMap, avec ton e-mail, ton mot de passe (chiffré, illisible même pour nous) et ton code de bande. Rien d'autre.</li>
+        <li>Ton inscription crée ton compte SmashMap, avec ton e-mail, ton mot de passe (chiffré, illisible même pour nous) et ton code de bande. On note aussi la langue de la page, d'où tu arrives (Instagram, TikTok…) et le lien de bande utilisé s'il y en a un. Rien d'autre.</li>
+        <li>Dans l'app, la position de chaque smash est arrondie à environ 100 m avant d'être enregistrée : ta bande voit le quartier, jamais l'adresse.</li>
         <li>Pourquoi : te prévenir de la sortie et te faire entrer avec ta bande. Base légale : ton consentement.</li>
         <li>Combien de temps : jusqu'à la sortie, puis 3 mois maximum si tu n'utilises jamais l'app.</li>
         <li>Personne d'autre n'y a accès. Aucune revente, aucune pub, aucun traceur publicitaire sur cette page.</li>
@@ -641,6 +642,12 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
   if (ref) $("invite").hidden = false;
 
   function store(k, v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
+  // Les liens « Données » ouvrent le volet, sinon ils défilent vers un titre replié et semblent ne rien faire.
+  function openData(){ var d = document.querySelector("#donnees details"); if (d) d.open = true; }
+  document.querySelectorAll('a[href="#donnees"]').forEach(function(a){ a.addEventListener("click", openData); });
+  if (location.hash === "#donnees") openData();
+  // Langue choisie à la main : elle prime sur celle de l'appareil.
+  document.querySelectorAll(".lang a").forEach(function(a){ a.addEventListener("click", function(){ store("smashmap_lang", a.lang); }); });
   function bandLink(code){ return location.origin + location.pathname + "?b=" + code + "&src=bande"; }
 
   function showDone(res, already){

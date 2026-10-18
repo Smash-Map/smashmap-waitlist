@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+  // La racine est en anglais : un appareil en français part sur /fr/ (lien de bande et retour de confirmation compris),
+  // sauf si son propriétaire a choisi EN avec le sélecteur.
+  try{ if (location.protocol !== "file:" && /^fr\b/i.test(navigator.language || "") && localStorage.getItem("smashmap_lang") !== "en") location.replace("fr/" + location.search + location.hash); }catch(e){}
+</script>
 <title>SmashMap · Waitlist</title>
 <meta name="description" content="Your map. Your crew. Nobody else. SmashMap lands this winter on iPhone and Android — join with your crew.">
 <meta property="og:title" content="SmashMap is coming. Join with your crew.">
@@ -482,7 +487,7 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
       <div class="step">
         <div class="vis vis-map"><svg class="drop"><use href="#peche"/></svg></div>
         <h3>Add your smash</h3>
-        <p>A title, a city, a date. The location is blurred before it even leaves your phone.</p>
+        <p>A title, a nickname, a spot on the map. Your crew sees it, nobody else, and <a href="#donnees">your data stays protected</a>.</p>
       </div>
       <div class="step">
         <div class="vis">
@@ -537,7 +542,7 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
         <h2>Your map never leaves your crew.</h2>
       </div>
       <div class="promises">
-        <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>No names, ever</b><span>You cannot name or tag anyone. The field does not exist.</span></div></div>
+        <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Nobody gets tagged</b><span>No tags, no linked accounts. The nickname you give stays private, unless you choose to show it to your crew.</span></div></div>
         <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Nothing is public</b><span>No stranger profiles, no open DMs. SmashMap never matches anyone with anyone.</span></div></div>
         <div class="promise"><span class="ck"><svg><use href="#check"/></svg></span><div><b>Leave whenever you want</b><span>Delete your account in one tap and everything goes with it.</span></div></div>
       </div>
@@ -575,7 +580,8 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
     <details>
       <summary>What we do with your data</summary>
       <ul>
-        <li>Signing up creates your SmashMap account, with your email, password (hashed, unreadable even to us) and crew code. Nothing else.</li>
+        <li>Signing up creates your SmashMap account, with your email, password (hashed, unreadable even to us) and crew code. We also note the page language, where you came from (Instagram, TikTok…) and the crew link you used, if any. Nothing else.</li>
+        <li>In the app, each smash's position is rounded to about 100 m before it is saved: your crew sees the neighbourhood, never the address.</li>
         <li>Why: to tell you when we launch and let you in with your crew. Legal basis: your consent.</li>
         <li>How long: until launch, then 3 months at most if you never use the app.</li>
         <li>Nobody else has access. No resale, no ads, no advertising trackers on this page.</li>
@@ -641,6 +647,12 @@ input:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{o
   if (ref) $("invite").hidden = false;
 
   function store(k, v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
+  // Les liens « Données » ouvrent le volet, sinon ils défilent vers un titre replié et semblent ne rien faire.
+  function openData(){ var d = document.querySelector("#donnees details"); if (d) d.open = true; }
+  document.querySelectorAll('a[href="#donnees"]').forEach(function(a){ a.addEventListener("click", openData); });
+  if (location.hash === "#donnees") openData();
+  // Langue choisie à la main : elle prime sur celle de l'appareil.
+  document.querySelectorAll(".lang a").forEach(function(a){ a.addEventListener("click", function(){ store("smashmap_lang", a.lang); }); });
   function bandLink(code){ return location.origin + location.pathname + "?b=" + code + "&src=bande"; }
 
   function showDone(res, already){
