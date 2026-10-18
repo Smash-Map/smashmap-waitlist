@@ -18,12 +18,14 @@ captures de l'app** (`img/app-carte*.jpg`, `img/app-fil*.jpg`, sorties de
 Les réglages de build sont dans `vercel.json` (`node env.mjs`, sortie `.`) ;
 `.vercelignore` garde `.env` hors ligne.
 
-1. Depuis `waitlist/` : `npx vercel` (connexion, puis « Set up and deploy » :
+1. Depuis ce dossier : `npx vercel` (connexion, puis « Set up and deploy » :
    nouveau projet `smashmap-waitlist`, dossier `./`, ne pas modifier les réglages).
 2. Variables : `npx vercel env add SUPABASE_URL` puis `npx vercel env add SUPABASE_ANON_KEY`
    (environnements Production et Preview), ou dans le dashboard,
    **Settings > Environment Variables**.
-3. Mise en ligne : `npx vercel --prod`. À refaire après chaque modification.
+3. Mise en ligne : automatique, chaque push sur `main` déploie en production
+   (repo GitHub `Smash-Map/smashmap-waitlist` relié au projet Vercel). Une autre
+   branche donne un aperçu (Preview). À la main si besoin : `npx vercel --prod`.
 4. Domaine : **Settings > Domains** → `smashmap.app`, puis chez Infomaniak (zone DNS)
    l'enregistrement indiqué par Vercel (`A` sur la racine, `CNAME` pour `www`).
    Le HTTPS se fait tout seul.
@@ -72,7 +74,7 @@ group by 1 order by 2 desc;
 **À régler côté Supabase avant la campagne :**
 
 - **Limite anti-spam** : `pnpm --filter @smashmap/api auth:limits` (depuis la racine
-  du dépôt, avec `SUPABASE_URL` + `SUPABASE_ACCESS_TOKEN` du projet visé) → 10
+  du monorepo SmashMap, avec `SUPABASE_URL` + `SUPABASE_ACCESS_TOKEN` du projet visé) → 10
   inscriptions max par IP toutes les 5 minutes, appliqué par Supabase. La clé anon
   étant publique, c'est cette limite qui protège la base, pas le site. Le formulaire
   ajoute un garde-fou (3 envois par navigateur toutes les 10 minutes), contournable.
